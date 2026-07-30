@@ -1,0 +1,2 @@
+PySCIPOpt==5.0.0
+confuse

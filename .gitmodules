@@ -1,0 +1,5 @@
+[submodule "superscript-abm"]
+	path = superscript-abm
+	url = https://github.com/Superscriptus/superscript-abm-public.git
+	branch = main
+	ignore = dirty

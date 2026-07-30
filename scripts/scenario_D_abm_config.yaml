@@ -1,0 +1,252 @@
+---
+# SuperScript configuration parameters.
+#:==========
+#
+# Each parameter is explained in the comments.
+#
+# Variables whose value can be overridden in the model SuperScriptModel()
+# constructor are indicated with a [*] at the beginning of the comment.
+# """
+model:
+  print_decimals_to: 1  # number of decimal points to use when printing.
+  random_seed: None  # if use an integer, allows reproducibility between simulations by seeding random number generation.
+  new_projects_per_timestep: 2  # [*]number of new projects created on each timestep.
+  department_count: 10  # [*]number of departments in the simulation (must be >= number of workers).
+  worker_count: 100  # [*]total number of workers in the simulation (constant).
+  budget_functionality_flag: true  # [*]can be used to switch off budget functionality. (if false, budget is infinite.)
+  io_dir: './simulation_io/'  # [*]directory to save projects and network to (or to read project file from).
+  rep_id: 0  # id number for simulation replicate.
+  save_network: False  # [*]whether to save the social network.
+  data_collection: True
+
+team:
+  team_ovr_multiplier: 20  # used to compute team ovr metric
+  min_team_size: 3  # minimum number of workers in a team
+  max_team_size: 7  # maximum number of workers in a team
+  worker_strategy: "stake"  # [*]selects strategy for used by workers to bid. can take ["allin", "stake"]
+
+department:
+  departmental_workload: 0.3  # [*]fraction of departmental capacity that must be held back to meet workload.
+  units_per_full_time: 10  # number of units equal to full-time equivalent.
+  workload_satisfied_tolerance: 0  # minimum number of units slack when a worker is checking if they can bid.
+                                   # Deprecated. Was previously used to ensure dept workload would not be
+                                   # exceeded. But this is now handled better by the Constraints class.
+skills:
+  hard_skills: ['A', 'B', 'C', 'D', 'E']  # these are the so-called 'hard' skills.
+  soft_skills: ['F', 'G', 'H', 'I', 'J']  # these are the so-called 'soft' skills.
+  max_skill_level: 5  # maximum allowed level for hard and soft skills.
+  min_soft_skill_level: 1  # minimum possible values for soft skills.
+  skill_decay_factor: 0.95  # decay multiplier for unused skills.
+  hard_skill_probability: 0.8  # probability that each hard skill exists (i.e. is non-zero) when worker created.
+  ovr_multiplier: 20  # multiplier for calculating worker ovr.
+
+worker:
+  worker_success_history_length: 4  # number of previous projects to track in social network.
+  worker_success_history_threshold: 0.75  # required successful fraction of tracked projects to produce 'momentum'
+  roi_return_dict: {
+    True: 50,
+    False: 10,
+    'active': 5,
+    'train': 5,
+    'dept': 10,
+    'inactive': 0
+  }   # the return on investment that is given by workers in different states: project success, fail, active on project,
+  # training and conducting departmental workload.
+  # distribution parameters for peer assessment (success and fail):
+  peer_assessment_success_mean: 1.05
+  peer_assessment_success_stdev: 0.2
+  peer_assessment_fail_mean: 0.95
+  peer_assessment_fail_stdev: 0.2
+  peer_assessment_weight: 0.25
+  replace_after_inactive_steps: 10  # worker removed from simulation after this many timesteps (worker turnover).
+
+project_inventory:
+  maximum_timeline_flexibility: 4  # maximum project start time offset.
+  timeline_flexibility: False  # [*]timeline flexibility allowed? values: [True, False]
+  update_skill_by_risk_flag: True  # whether to include the stage in skill update which is dependent on project risk.
+  save_projects: False  # [*]whether to save the projects created during the simulation to disk for re-use later.
+  load_projects: False  # [*]whether to load pre-defined projects from disk.
+
+success_calculator:
+  hard_skills_only: False  # if true, only use hard skills for project success prob (for rl simplification).
+  probability_function_weights: [1, 1, 1, 1, 1, 1]  # defaults weights for the "weighted" version.
+  calculator_allowed_types: ['legacy', 'weighted_linear', 'weighted_nonlinear']
+  individual_chemistry_max_value: 3  # used to normalise individual_chemistry component.
+
+project:
+  project_length: 5  # [*]project length in timesteps.
+  default_creation_time: 0  # default offset measured in timesteps from project creation.
+  success_probability_calculator_type: "weighted_nonlinear"
+    # "legacy": original function that was used for first streamlit release.
+    # "weighted_linear" and "weighted_nonlinear": new, more intuitive function with component weights,
+    #                                               using either linear or nonlinear component functions.
+
+project_requirements:
+  p_hard_skill_required: 0.8  # probability that each hard skill is required by a project.
+  per_skill_max: 7  # maximum number of units that can be required per hard skill.
+  per_skill_min: 1  # minimum number of units that can be required per hard skill.
+  min_skill_required: 2  # minimum number of total units that can be required by a project.
+  min_skill_level: 1  # minimum skill level that can be required.
+  max_skill_level: 5  # maximum skill level that can be required.
+  min_project_creativity: 0  # minimum desired creativity level.
+  max_project_creativity: 1  # maximum desired creativity level.
+  risk_levels: [5, 10, 25]  # possible project risk values.
+  p_budget_flexibility: 0.25  # [*]probability that each project has a flexible budget.
+  max_budget_increase: 1.25  # [*]multiplier that used to calculate  max budget flex.
+
+#parameters for the functions supplied by function.FunctionFactory
+functions:
+    general_functions:
+      skill_update_by_risk:
+        function_type: 'linear'
+        kwargs: {gradient: 0.01, intercept: 1.0}
+    success_calculators:
+      # if success_probability_calculator == 'legacy'
+      legacy:
+          success_probability_ovr:
+            function_type: 'linear'
+            kwargs: {gradient: 0.75, intercept: 0.0}
+          success_probability_skill_balance:
+            function_type: 'linear'
+            kwargs: {gradient: -2.5, intercept: 0.0}
+          success_probability_creativity_match:
+            function_type: 'saturating'
+            kwargs: {alpha: -40, asymptote: -30, rate: 1.0}
+          success_probability_risk:
+            function_type: 'linear'
+            kwargs: {gradient: -0.75, intercept: 3.75}
+          success_probability_individual_chemistry:
+            function_type: 'linear'
+            kwargs: {gradient: 2.5, intercept: 0.0}
+          # Note: in 'legacy' mode, as chemistry is handled by individual_chemistry component.
+          success_probability_team_chemistry:
+              function_type: 'linear'
+              kwargs: {gradient: 0.0, intercept: 0.0}
+      weighted_nonlinear:
+      # if success_probability_calculator == 'weighted_nonlinear'
+          success_probability_ovr:
+            function_type: 'saturating'
+            kwargs: {rate: 0.5, asymptote: 1.0, alpha: 1.0}
+          success_probability_skill_balance:
+            function_type: 'exponential_decay'
+            kwargs: {rate: 0.1, intercept: 1.0}
+          success_probability_creativity_match:
+            function_type: 'exponential_decay'
+            kwargs: {rate: 0.01, intercept: 1.0}
+          success_probability_risk:
+            function_type: 'linear'
+            kwargs: {gradient: -1.0, intercept: 1.0}
+          success_probability_individual_chemistry:
+            function_type: 'exponential_growth'
+            kwargs: {rate: 0.3, intercept: 1.0}
+          success_probability_team_chemistry:
+            function_type: 'saturating'
+            kwargs: {rate: 0.3, asymptote: 1.0, alpha: 1.0}
+
+      weighted_linear:
+      # if success_probability_calculator == 'weighted_linear'
+          success_probability_ovr:
+            function_type: 'linear'
+            kwargs: {gradient: 1.0, intercept: 0.0}
+          success_probability_skill_balance:
+            function_type: 'linear'
+            kwargs: {gradient: -1.0, intercept: 1.0}
+          success_probability_creativity_match:
+            function_type: 'linear'
+            kwargs: {gradient: -1.0, intercept: 1.0}
+          success_probability_risk:
+            function_type: 'linear'
+            kwargs: {gradient: -1.0, intercept: 1.0}
+          success_probability_individual_chemistry:
+            function_type: 'linear'
+            kwargs: {gradient: 1.0, intercept: 0.0}
+          success_probability_team_chemistry:
+            function_type: 'linear'
+            kwargs: {gradient: 1.0, intercept: 0.0}
+
+trainer:
+  training_on: False  # [*]training functionality on/off
+  training_mode: 'slots'  # [*]training mode to use. values: ['slots', 'all'].
+  training_length: 5  # length of a training course.
+  training_commences: 10  # [*]training does not commence until this timestep.
+  target_training_load: 0.0  # [*]fraction of workforce that should be in training at any time (used by 'slots').
+
+network:
+  historical_success_ratio_threshold: 0.5  # fraction of team that have worked together on successful projects.
+
+organisation_strategy:
+  optimiser_type: 'random'  # type of optimiser to use, must be one of those listed in 'optimisation' section below.
+  runner_type: 'series'  # Options: [series, parallel]. Parallel runs multiple optimisations with Pathos, takes best result.
+  filter_type: []  # Must be list of filters defined in 'filters' section below. Can be empty.
+
+optimisers:
+  random:
+    respect_constraints: False  # If True, tries for <timeout> seconds to respect constraints, returns Null Team if fail.
+    timeout: 0.5  # Number of seconds to try selecting random teams until constraints are met, fail after timeout.
+  basin:
+    number_of_basin_hops: 10  # [*]number of basinhopping iterations to run.
+    smart_guess_timeout: 1  # Number of seconds to spend trying to find a smart_guess that meets the constraints.
+    p_norm: 2  # P-norm to use for minkowski distance between worker skills and project requirements.
+    maxiter: 100  # Maximum iterations (COBYLA parameter).
+    catol: 0.0  # Tolerance on constraints (COBYLA parameter).
+    rhobeg: 0.6  # Reasonable initial change (COBYLA parameter).
+    seed: 42  # Seed to Scipy basinhopping randomiser.
+    verbose: False
+    step_accept_tol: 0.1  # Tolerance on objective gain in accept_test.
+  exhaustive_search:
+    timeout: 3  # Number of seconds until timeout and return current best solution.
+    team_size: 3  # Algorithm will find best team of this size.
+  exhaustive_greedy:
+    timeout: 10  # Number of seconds until timeout and return current best solution.
+    team_size: [ 2 ]  # Algorithm will find best team from these sizes.
+  grasp:
+    grasp_threshold: 0.85 #Consider all (worker, skill) options which are within this fraction of best option
+    stopping_max_solutions: 500 #Maximum number of solutions before stopping (actual number may vary slightly, based on processors)
+    stopping_no_improvement: 100 #Stop early if this number of solutions have been found with no improvement to the objective
+    num_proc: 10  # number of processors to use for internal parallelization.
+  linear:
+    objective_ovr: 10  #Coefficient in objective function for team OVR
+    objective_skill_balance: -5 #Coefficient in objective function for being below threshold for required skill
+    objective_creativity: 0.1 #Coefficient in objective function for creativity match in the team
+    objective_team_chemistry: 0.1 #Coefficient in objective function for chemistry among the team
+    objective_individual_chemistry: 0.5 #Coefficient in objective function for chemistry of individual team members
+    time_limit: 720 #Time limit (in seconds) for branch-and-bound before returning solution
+  greedy:
+    shuffle: False  # Whether to shuffle the valid options (to test for ordering effects).
+  reinforcement_learning:
+    trained_model: 'RLD2-v3.106_4'  # pre-trained PPO agent
+    hyperparameters: 'RLD2-v3.106'
+    deterministic: True  # whether to use RLD2 PPO action prediction in deterministic mode (use False for num_repeats > 1)
+    num_repeats: 10  # Number of repeat stochastic RLD2 solutions to find
+    rld1_deterministic: True  # as for 'deterministic' but for RLD1 (hard skill allocator)
+    rld1_num_repeats: 1  # Number of repeat stochastic RLD1 solutions to find, per RLD2 solution
+    timeout: 1
+runners:
+  parallel:
+    num_proc: 10  # [*]number of processors to use in runner class.
+    num_repeats: 10  # Number of repeat optimisation runs to be mapped across num_proc.
+    wall_timeout: 3600  # Total wall time - return current best solution if exceeded.
+    # Note: thread timeout handled by optimiser.
+  series:
+    num_proc: 1  # Not in use.
+
+utilities:
+  success_probability_min: -1.075  # minimum value returned by 'probability' function before normalisation.
+  success_probability_max: 0.95  # maximum value returned by 'probability' function before normalisation.
+  success_probability_min_hard_skills_only: -0.40  # minimum value when using only hard skills (ie hard_skills_only=true)
+  success_probability_max_hard_skills_only: 0.75  # maximum value when using only hard skills (ie hard_skills_only=true).
+
+filters:
+  flag_update_dept_on_filtering: False  # Reduce size of dept as if actually shrinking workforce? By default no.
+  skill_threshold:
+    skill_difference_threshold: 1.5 #only consider workers with skill level >= required skill level minus this value
+  first_n:
+    filter_size: 10
+  ml_filter:
+    model_file: 'rf_trained_cv.joblib'  # Classifier to use for filtering. Here: random forest trained on 10k dataset.
+    filter_size: 50
+    n_jobs: 1  # number of cores to use for RF prediction
+  random:
+    filter_size: 50
+    timeout: 5
+...

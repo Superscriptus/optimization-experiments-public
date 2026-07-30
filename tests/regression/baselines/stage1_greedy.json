@@ -1,0 +1,51 @@
+{
+  "state_0.pickle": {
+    "creativity_level": 0.46513306360993256,
+    "creativity_match": 0.001776884283495138,
+    "individual_chemistry": 2.0,
+    "ovr": 44.813450714400815,
+    "probability": 0.5345755810247655,
+    "probability_creativity_match": 0.988955911943834,
+    "probability_individual_chemistry": 0.3291929878079055,
+    "probability_ovr": 0.5919106013688683,
+    "probability_risk": 0.8,
+    "probability_skill_balance": 0.4973939850279857,
+    "probability_team_chemistry": 0.0,
+    "risk": 5.0,
+    "skill_balance": 0.06983728405126792,
+    "team_chemistry": 0.0,
+    "team_size": 7.0,
+    "workers": [
+      2,
+      24,
+      30,
+      41,
+      65,
+      71,
+      94
+    ]
+  },
+  "state_10.pickle": {
+    "creativity_level": 0.4888805860469011,
+    "creativity_match": 0.030602273412216385,
+    "individual_chemistry": 3.0,
+    "ovr": 36.840948602922865,
+    "probability": 0.8153453023117603,
+    "probability_creativity_match": 0.8259143454617589,
+    "probability_individual_chemistry": 1.0,
+    "probability_ovr": 0.521365955277503,
+    "probability_risk": 0.6,
+    "probability_skill_balance": 0.9804655064785526,
+    "probability_team_chemistry": 0.9643260066527476,
+    "risk": 10.0,
+    "skill_balance": 0.0019727813486678956,
+    "team_chemistry": 1.0,
+    "team_size": 4.0,
+    "workers": [
+      4,
+      17,
+      26,
+      30
+    ]
+  }
+}

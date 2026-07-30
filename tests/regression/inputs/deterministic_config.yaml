@@ -1,0 +1,280 @@
+model:
+  print_decimals_to: 1
+  random_seed: None
+  new_projects_per_timestep: 2
+  department_count: 10
+  worker_count: 100
+  budget_functionality_flag: true
+  io_dir: ./simulation_io/
+  rep_id: 0
+  save_network: false
+  data_collection: true
+team:
+  team_ovr_multiplier: 20
+  min_team_size: 3
+  max_team_size: 7
+  worker_strategy: stake
+department:
+  departmental_workload: 0.1
+  units_per_full_time: 10
+  workload_satisfied_tolerance: 0
+skills:
+  hard_skills:
+  - A
+  - B
+  - C
+  - D
+  - E
+  soft_skills:
+  - F
+  - G
+  - H
+  - I
+  - J
+  max_skill_level: 5
+  min_soft_skill_level: 1
+  skill_decay_factor: 0.99
+  hard_skill_probability: 0.8
+  ovr_multiplier: 20
+worker:
+  worker_success_history_length: 4
+  worker_success_history_threshold: 0.75
+  roi_return_dict:
+    true: 50
+    false: 10
+    active: 5
+    train: 5
+    dept: 10
+    inactive: 0
+  peer_assessment_success_mean: 1.05
+  peer_assessment_success_stdev: 0.2
+  peer_assessment_fail_mean: 0.95
+  peer_assessment_fail_stdev: 0.2
+  peer_assessment_weight: 0.25
+  replace_after_inactive_steps: 10
+project_inventory:
+  maximum_timeline_flexibility: 4
+  timeline_flexibility: false
+  update_skill_by_risk_flag: true
+  save_projects: false
+  load_projects: false
+success_calculator:
+  hard_skills_only: false
+  probability_function_weights:
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  calculator_allowed_types:
+  - legacy
+  - weighted_linear
+  - weighted_nonlinear
+  individual_chemistry_max_value: 3
+project:
+  project_length: 5
+  default_creation_time: 0
+  success_probability_calculator_type: weighted_nonlinear
+project_requirements:
+  p_hard_skill_required: 0.8
+  per_skill_max: 7
+  per_skill_min: 1
+  min_skill_required: 2
+  min_skill_level: 1
+  max_skill_level: 5
+  min_project_creativity: 0
+  max_project_creativity: 1
+  risk_levels:
+  - 5
+  - 10
+  - 25
+  p_budget_flexibility: 0.25
+  max_budget_increase: 1.25
+functions:
+  general_functions:
+    skill_update_by_risk:
+      function_type: linear
+      kwargs:
+        gradient: 0.01
+        intercept: 1.0
+  success_calculators:
+    legacy:
+      success_probability_ovr:
+        function_type: linear
+        kwargs:
+          gradient: 0.75
+          intercept: 0.0
+      success_probability_skill_balance:
+        function_type: linear
+        kwargs:
+          gradient: -2.5
+          intercept: 0.0
+      success_probability_creativity_match:
+        function_type: saturating
+        kwargs:
+          alpha: -40
+          asymptote: -30
+          rate: 1.0
+      success_probability_risk:
+        function_type: linear
+        kwargs:
+          gradient: -0.75
+          intercept: 3.75
+      success_probability_individual_chemistry:
+        function_type: linear
+        kwargs:
+          gradient: 2.5
+          intercept: 0.0
+      success_probability_team_chemistry:
+        function_type: linear
+        kwargs:
+          gradient: 0.0
+          intercept: 0.0
+    weighted_nonlinear:
+      success_probability_ovr:
+        function_type: saturating
+        kwargs:
+          rate: 0.5
+          asymptote: 1.0
+          alpha: 1.0
+      success_probability_skill_balance:
+        function_type: exponential_decay
+        kwargs:
+          rate: 0.1
+          intercept: 1.0
+      success_probability_creativity_match:
+        function_type: exponential_decay
+        kwargs:
+          rate: 0.01
+          intercept: 1.0
+      success_probability_risk:
+        function_type: linear
+        kwargs:
+          gradient: -1.0
+          intercept: 1.0
+      success_probability_individual_chemistry:
+        function_type: exponential_growth
+        kwargs:
+          rate: 0.3
+          intercept: 1.0
+      success_probability_team_chemistry:
+        function_type: saturating
+        kwargs:
+          rate: 0.3
+          asymptote: 1.0
+          alpha: 1.0
+    weighted_linear:
+      success_probability_ovr:
+        function_type: linear
+        kwargs:
+          gradient: 1.0
+          intercept: 0.0
+      success_probability_skill_balance:
+        function_type: linear
+        kwargs:
+          gradient: -1.0
+          intercept: 1.0
+      success_probability_creativity_match:
+        function_type: linear
+        kwargs:
+          gradient: -1.0
+          intercept: 1.0
+      success_probability_risk:
+        function_type: linear
+        kwargs:
+          gradient: -1.0
+          intercept: 1.0
+      success_probability_individual_chemistry:
+        function_type: linear
+        kwargs:
+          gradient: 1.0
+          intercept: 0.0
+      success_probability_team_chemistry:
+        function_type: linear
+        kwargs:
+          gradient: 1.0
+          intercept: 0.0
+trainer:
+  training_on: true
+  training_mode: slots
+  training_length: 5
+  training_commences: 10
+  target_training_load: 0.1
+network:
+  historical_success_ratio_threshold: 0.5
+organisation_strategy:
+  optimiser_type: random
+  runner_type: series
+  filter_type: []
+optimisers:
+  random:
+    respect_constraints: false
+    timeout: 0.5
+  basin:
+    number_of_basin_hops: 10
+    smart_guess_timeout: 1
+    p_norm: 2
+    maxiter: 100
+    catol: 0.0
+    rhobeg: 0.6
+    seed: 42
+    verbose: false
+    step_accept_tol: 0.1
+  exhaustive_search:
+    timeout: 3
+    team_size: 3
+  exhaustive_greedy:
+    timeout: 10
+    team_size:
+    - 2
+  grasp:
+    grasp_threshold: 0.95
+    stopping_max_solutions: 20
+    stopping_no_improvement: 5
+    num_proc: 2
+    time_limit: 900
+    random_seed: 42
+  linear:
+    objective_ovr: 10
+    objective_skill_balance: -5
+    objective_creativity: 0.1
+    objective_team_chemistry: 0.1
+    objective_individual_chemistry: 0.5
+    time_limit: 720
+    num_proc: 4
+  greedy:
+    shuffle: false
+  reinforcement_learning:
+    trained_model: RLD2-v3.106_4
+    hyperparameters: RLD2-v3.106
+    deterministic: true
+    num_repeats: 10
+    rld1_deterministic: false
+    rld1_num_repeats: 10
+    timeout: 1
+runners:
+  parallel:
+    num_proc: 10
+    num_repeats: 10
+    wall_timeout: 3600
+  series:
+    num_proc: 1
+utilities:
+  success_probability_min: -1.075
+  success_probability_max: 0.95
+  success_probability_min_hard_skills_only: -0.4
+  success_probability_max_hard_skills_only: 0.75
+filters:
+  flag_update_dept_on_filtering: false
+  skill_threshold:
+    skill_difference_threshold: 1.5
+  first_n:
+    filter_size: 10
+  ml_filter:
+    model_file: rf_trained_cv.joblib
+    filter_size: 20
+    n_jobs: 1
+  random:
+    filter_size: 20
+    timeout: 5
