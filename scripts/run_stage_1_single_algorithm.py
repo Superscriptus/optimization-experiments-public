@@ -93,9 +93,9 @@ def _resolve_model_and_rl_config(GLOBALS):
             'trained_model': model_name,
             'hyperparameters': model_env,
             'deterministic': False,
-            'num_repeats': 1, #10, CHANGE
+            'num_repeats': 10,  # x parallel runner's 10 = 100 effective RLD2 rollouts (article rld2_100_10)
             'rld1_deterministic': False,
-            'rld1_num_repeats': 1, # 10, CHANGE
+            'rld1_num_repeats': 10,
             'timeout': 1
         }
         GLOBALS['OPTIMISER_TYPE'] = 'reinforcement_learning'
