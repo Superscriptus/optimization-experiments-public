@@ -24,15 +24,36 @@
 
 # OptimizationExperiments
 
-Experiments comparing **team-allocation optimisation methods** for
-**SuperScript**, an agent-based model (ABM) of team formation in
-project-based organisations. This repository is the top-level codebase for
-the accompanying article: it contains the experiment drivers, experiment
-configuration, results, analysis, and the golden regression suite used to
-verify that the article results reproduce.
+We combine an **agent-based model** of a project-based organisation with
+**hierarchical reinforcement learning** and **numerical optimisation** to study the
+effects of different team-allocation algorithms on organisational dynamics and
+emergent structure.
 
-The optimisers compared are: Random, Greedy, GRASP, MILP (the "linear"
-optimiser, solved with SCIP), hierarchical reinforcement learning
+> **Key finding: team-allocation algorithms determine organisational structure.**
+> Allocators that chase an identical definition of project success, and that score
+> almost the same on it, still steer an organisation down measurably different paths.
+> Across a simulated organisational lifetime they differ on how widely the workforce
+> collaborates, how expertise accumulates, and how often people are churned and
+> replaced. Choosing an allocator is therefore a decision about organisational
+> design, not just a question of solver quality — and what it decides stays hidden
+> from the short-run delivery metrics a manager would normally watch.
+
+<p align="center">
+  <img src="documentation/images/radar_plot_main_algorithms.png"
+       alt="Radar comparison of team-allocation methods across the six components of the project-success objective"
+       width="720">
+  <br>
+  <em>Team-allocation methods compared across the six components of the
+  project-success objective, for 100- and 20-worker organisations under the
+  linear and nonlinear forms of the objective function.</em>
+</p>
+
+This repository is the top-level codebase for the accompanying article: it contains
+the experiment drivers, experiment configuration, results, analysis, and the golden
+regression suite used to verify that the article results reproduce.
+
+The optimisers compared are: Random, Greedy, GRASP, MILP,
+hierarchical reinforcement learning
 (RLD2 team selection over an RLD1 hard-skill allocator), and an Ensemble of
 methods. Each is run over datasets of pickled ABM states (100-worker
 organisations) and scored by the resulting project-success probability.
@@ -131,7 +152,7 @@ Key pins in `article_requirements.txt` (recorded in
 pandas 2.2.2, scikit-learn 1.4.1.post1, Mesa 0.9.0, gymnasium 0.29.1,
 stable-baselines3 2.3.2, PySCIPOpt 5.1.1.
 
-**PySCIPOpt / SCIP note (needed for the MILP "linear" optimiser).**
+**PySCIPOpt / SCIP note (needed for MILP).**
 Installing `pyscipopt` on Linux historically required building
 [SCIP](https://www.scipopt.org/) manually and setting `SCIPOPTDIR`
 (see the [SCIP install guide](https://github.com/scipopt/scip/blob/master/INSTALL.md)).
@@ -191,7 +212,7 @@ JSON results (`tests/regression/baselines/`), byte-for-byte for the
 deterministic tiers.
 
 ```bash
-make -C tests/regression regression       # exact tier: greedy, random, linear (MILP)
+make -C tests/regression regression       # exact tier: greedy, random, MILP (algo key: linear)
 # deterministic tier (adds seeded GRASP + deterministic RL; RL uses the
 # LFS-shipped trained model models/RLD2-v3.106-nonlinear_2 in superscript-abm):
 PYTHONHASHSEED=0 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 \
@@ -207,7 +228,7 @@ Notes:
 - Golden equality is environment-sensitive: use the pins above
   (`tests/regression/baselines/MANIFEST.json` records the exact
   environment; cross-platform bitwise parity is not guaranteed).
-- The `linear` test skips if PySCIPOpt/SCIP is unavailable; the `rld2`
+- The MILP test (algo key `linear`) skips if PySCIPOpt/SCIP is unavailable; the `rld2`
   deterministic test requires the LFS-shipped trained model (above).
 
 A separate observation-encoding golden for the gym environments
